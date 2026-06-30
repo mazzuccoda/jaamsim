@@ -101,11 +101,20 @@ cp .env.example .env
 | Variable | Default | Descripción | Ejemplos |
 |----------|---------|-------------|----------|
 | `JAAMSIM_MODEL` | `/models/model.cfg` | Ruta al `.cfg` dentro del contenedor | `/models/almacen.cfg` |
-| `JAAMSIM_ARGS` | *(vacío)* | Flags extra de JaamSim (además de `-h -b`) | `-r 10`, `-s`, `-r 5 -v` |
+| `JAAMSIM_ARGS` | *(vacío)* | Flags extra de JaamSim (además de `-h -b`) | `-q` |
 | `JAVA_OPTS` | `-Xms256m -Xmx1g` | Opciones de la JVM | `-Xms512m -Xmx2g` |
 
 Los flags `-h` (headless) y `-b` (batch) **siempre** se añaden automáticamente;
 no necesitas incluirlos en `JAAMSIM_ARGS`.
+
+> **Réplicas:** JaamSim **no** tiene un flag de CLI para el número de réplicas
+> (no existe `-r N`). Se define **dentro del modelo** `.cfg`:
+> ```
+> Simulation NumberOfReplications { 10 }
+> ```
+> Flags de CLI realmente soportados por JaamSim (verificados sobre el JAR
+> 2025-02): `-h`/`-headless`, `-b`/`-batch`, `-q`/`-quiet`,
+> `-sg`/`-safe_graphics`, `-og`/`-optional_graphics`, `-script`.
 
 ---
 
@@ -204,10 +213,12 @@ docker compose build
 docker compose up
 ```
 
-Para una corrida con réplicas, por ejemplo:
+Para correr varias réplicas, define dentro del `.cfg`
+`Simulation NumberOfReplications { 10 }` y ejecuta normalmente
+(`docker compose up`). Para reducir la salida por consola:
 
 ```bash
-JAAMSIM_ARGS="-r 10" docker compose up
+JAAMSIM_ARGS="-q" docker compose up
 ```
 
 Detener y limpiar:

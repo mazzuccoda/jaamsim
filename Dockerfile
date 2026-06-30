@@ -61,7 +61,14 @@ WORKDIR /output
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=20s \
     CMD test -s /opt/jaamsim.jar && java -version >/dev/null 2>&1 || exit 1
 
-USER jaamsim
+# NOTA sobre el usuario:
+# El entrypoint ARRANCA como root SOLO para ajustar el propietario del volumen
+# bind-montado /output (cuyo dueño en el host es desconocido: puede ser root,
+# 1000, etc.). Inmediatamente después BAJA privilegios al usuario no-root
+# `jaamsim` con `setpriv` y la simulación corre como jaamsim (uid 999).
+# Esto permite el despliegue zero-config en Portainer sin tener que hacer
+# `chown`/`chmod` manual en el host, manteniendo el workload sin privilegios.
+ENV JAAMSIM_USER=jaamsim
 
 # tini como PID 1 + nuestro entrypoint
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]

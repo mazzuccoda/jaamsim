@@ -33,6 +33,21 @@ JAR="/opt/jaamsim.jar"
 MODEL="${JAAMSIM_MODEL:-/models/model.cfg}"
 EXTRA_ARGS="${JAAMSIM_ARGS:-}"
 JVM_OPTS="${JAVA_OPTS:--Xms256m -Xmx1g}"
+RUN_AS="${JAAMSIM_USER:-jaamsim}"
+
+# --- Ajuste de permisos + baja de privilegios ------------------------------
+# Si arrancamos como root (caso normal en Docker/Portainer), ajustamos el
+# propietario del volumen bind-montado /output (su dueño en el host puede ser
+# root, 1000, etc.) y luego RE-EJECUTAMOS este mismo script como el usuario
+# no-root `jaamsim`. Así la simulación corre sin privilegios y los bind mounts
+# funcionan sin configuración manual en el host (zero-config en Portainer).
+if [ "$(id -u)" = "0" ]; then
+    mkdir -p /output
+    # Solo /output necesita escritura; /models y /data van montados :ro.
+    chown -R "${RUN_AS}:${RUN_AS}" /output 2>/dev/null \
+        || printf '[WARN] No se pudo ajustar el propietario de /output (continuo)\n'
+    exec setpriv --reuid "$RUN_AS" --regid "$RUN_AS" --init-groups "$0" "$@"
+fi
 
 # --- Banner ----------------------------------------------------------------
 printf '%s\n' "$C_INFO"
@@ -83,9 +98,11 @@ mkdir -p "$RUN_DIR"
 RUN_LOG="${RUN_DIR}/jaamsim.log"
 log "Directorio de la corrida: ${RUN_DIR}"
 
-# Symlink latest -> última corrida (atómico vía rename)
-ln -sfn "$RUN_DIR" /output/latest.tmp 2>/dev/null && mv -Tf /output/latest.tmp /output/latest 2>/dev/null \
-    || ln -sfn "$RUN_DIR" /output/latest 2>/dev/null \
+# Symlink latest -> última corrida. Usamos una ruta RELATIVA (solo el nombre
+# del directorio) para que el enlace funcione tanto dentro del contenedor como
+# al inspeccionarlo desde el host (donde la ruta absoluta /output no existe).
+ln -sfn "$RUN_ID" /output/latest.tmp 2>/dev/null && mv -Tf /output/latest.tmp /output/latest 2>/dev/null \
+    || ln -sfn "$RUN_ID" /output/latest 2>/dev/null \
     || log_warn "No se pudo crear el symlink /output/latest (continuo igual)."
 
 # Copiamos el modelo a la carpeta del run para trazabilidad y para que
