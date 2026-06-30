@@ -1,0 +1,60 @@
+# JaamSim GUI (interfaz nativa accesible por navegador vía noVNC)
+# Despliegue en Portainer: Stacks -> Repository -> Compose path: docker-compose.gui.yml
+# Luego abrí:  http://<IP-del-host>:8080/vnc.html
+services:
+  jaamsim-gui:
+    build:
+      context: .
+      dockerfile: gui/Dockerfile
+      args:
+        JAAMSIM_VERSION: "2025-02"
+    image: jaamsim-gui:2025-02
+    container_name: jaamsim-gui
+    restart: unless-stopped
+
+    ports:
+      - "${NOVNC_PORT:-8080}:8080"   # noVNC (web) -> http://host:8080/vnc.html
+
+    environment:
+      # Resolución del escritorio virtual
+      SCREEN_WIDTH: "${SCREEN_WIDTH:-1440}"
+      SCREEN_HEIGHT: "${SCREEN_HEIGHT:-900}"
+      # Contraseña VNC (MUY recomendado definirla). Vacío = sin contraseña.
+      VNC_PASSWORD: "${VNC_PASSWORD:-}"
+      # Modelo a abrir automáticamente (opcional), ej: /models/almacen.cfg
+      JAAMSIM_MODEL: "${JAAMSIM_MODEL:-}"
+      JAVA_OPTS: "${JAVA_OPTS:--Xms256m -Xmx1536m}"
+
+    volumes:
+      - ./models:/models     # modelos .cfg (lectura/escritura desde la GUI)
+      - ./output:/output     # resultados de simulación
+      - ./data:/data:ro      # datos auxiliares (solo lectura)
+
+    shm_size: "512m"         # memoria compartida para X/OpenGL por software
+
+    healthcheck:
+      test: ["CMD-SHELL", "test -s /opt/jaamsim.jar && wget -q -O /dev/null http://localhost:8080/vnc.html || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+    labels:
+      com.jaamsim.stack: "jaamsim-portainer-stack"
+      com.jaamsim.component: "gui-novnc"
+      com.jaamsim.description: "GUI nativa de JaamSim accesible por navegador (noVNC)"
+
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 3G
+        reservations:
+          cpus: "0.5"
+          memory: 768M

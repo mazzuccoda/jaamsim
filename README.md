@@ -28,8 +28,9 @@ desplegarse directamente desde **Portainer → Stacks → Repository**.
 
 ```
 jaamsim-portainer-stack/
-├── docker-compose.yml      # Definición del stack (Portainer / CLI)
-├── Dockerfile              # Imagen: temurin:21-jre + JaamSim + tini
+├── docker-compose.yml      # Stack headless/batch (Portainer / CLI)
+├── docker-compose.gui.yml  # Stack GUI nativa por navegador (noVNC)
+├── Dockerfile              # Imagen headless: temurin:21-jre + JaamSim + tini
 ├── .env.example            # Plantilla de variables de entorno
 ├── .gitignore
 ├── README.md
@@ -39,9 +40,16 @@ jaamsim-portainer-stack/
 │   └── .gitkeep
 ├── data/                   # CSV / parámetros auxiliares -> /data (ro)
 │   └── .gitkeep
-└── docker/
-    └── entrypoint.sh       # Validaciones + ejecución + organización de output
+├── docker/
+│   └── entrypoint.sh       # Validaciones + ejecución + organización de output
+└── gui/
+    ├── Dockerfile          # Imagen GUI: + Xvfb + fluxbox + x11vnc + noVNC
+    └── start.sh            # Arranque de X virtual, VNC, noVNC y JaamSim
 ```
+
+> Hay **dos modos de uso**, independientes:
+> - **Headless/batch** (`docker-compose.yml`) — para correr modelos automáticamente. Es la Etapa 1 principal.
+> - **GUI en el navegador** (`docker-compose.gui.yml`) — la interfaz gráfica nativa de JaamSim accesible por web vía noVNC. Ver [sección GUI](#gui-de-jaamsim-en-el-navegador-novnc).
 
 ---
 
@@ -115,6 +123,52 @@ no necesitas incluirlos en `JAAMSIM_ARGS`.
 > Flags de CLI realmente soportados por JaamSim (verificados sobre el JAR
 > 2025-02): `-h`/`-headless`, `-b`/`-batch`, `-q`/`-quiet`,
 > `-sg`/`-safe_graphics`, `-og`/`-optional_graphics`, `-script`.
+
+---
+
+## GUI de JaamSim en el navegador (noVNC)
+
+Además del modo headless, podés usar la **interfaz gráfica nativa de JaamSim**
+(canvas de modelado, editor de entidades, vista 3D) directamente desde el
+navegador, sin instalar nada en tu PC. El contenedor corre la GUI sobre un X
+virtual (`Xvfb`) y la expone por web con `x11vnc` + `noVNC`.
+
+### Desplegar
+En Portainer: **Stacks → Add stack → Repository**, igual que el stack headless
+pero con **Compose path** = `docker-compose.gui.yml`. Luego abrí en el navegador:
+
+```
+http://<IP-del-host>:8080/
+```
+
+(El `/` redirige automáticamente a `vnc.html` y conecta solo.)
+
+Localmente:
+```bash
+docker compose -f docker-compose.gui.yml up --build
+# luego abrí http://localhost:8080/
+```
+
+### Variables (GUI)
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `NOVNC_PORT` | `8080` | Puerto web (noVNC) publicado |
+| `VNC_PASSWORD` | *(vacío)* | Contraseña VNC. **Definila** para proteger el acceso |
+| `SCREEN_WIDTH` / `SCREEN_HEIGHT` | `1440` / `900` | Resolución del escritorio virtual |
+| `JAAMSIM_MODEL` | *(vacío)* | Modelo `.cfg` a abrir al iniciar (ej. `/models/almacen.cfg`) |
+| `JAVA_OPTS` | `-Xms256m -Xmx1536m` | Opciones de la JVM |
+
+Los modelos que crees/edites en la GUI se guardan en `./models` (montado r/w) y
+los resultados en `./output`, de modo que podés correrlos luego en modo headless.
+
+> **Seguridad:** sin `VNC_PASSWORD` cualquiera con acceso de red al puerto 8080
+> puede usar la GUI. Definí una contraseña y/o poné el servicio detrás de un
+> reverse proxy con TLS/autenticación. noVNC viaja sin cifrar salvo que uses
+> HTTPS por delante.
+
+> **Rendimiento:** la vista 3D usa OpenGL por software (Mesa llvmpipe); funciona
+> sin GPU pero el render 3D puede ir lento en modelos grandes. El modelado 2D y
+> la edición van fluidos.
 
 ---
 
@@ -239,6 +293,8 @@ docker compose down
 | [Docker Compose](https://docs.docker.com/compose/) | Definición del stack | v2 (`docker compose`) |
 | [Portainer](https://www.portainer.io/) | Despliegue/gestión (CE y EE) | Stacks → Repository |
 | [tini](https://github.com/krallin/tini) | Init / PID 1 (manejo de señales) | paquete distro |
+| [noVNC](https://novnc.com/) + [websockify](https://github.com/novnc/websockify) | Cliente VNC web (solo modo GUI) | paquete distro |
+| [x11vnc](https://github.com/LibVNC/x11vnc) + [Xvfb](https://www.x.org/) + [fluxbox](http://fluxbox.org/) | X virtual + servidor VNC + WM (solo modo GUI) | paquete distro |
 
 Arquitectura objetivo: **linux/amd64**. Compatible con Docker Standalone
 (no requiere Swarm).
