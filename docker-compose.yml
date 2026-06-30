@@ -1,0 +1,52 @@
+# JaamSim headless stack — listo para Portainer (Stacks -> Repository)
+# Docker Compose v2 (usar:  docker compose ...,  sin guión)
+services:
+  jaamsim-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        JAAMSIM_VERSION: "2025-02"
+    image: jaamsim-runner:2025-02
+    container_name: jaamsim-runner
+    restart: unless-stopped
+
+    environment:
+      # Ruta al modelo .cfg dentro del contenedor
+      JAAMSIM_MODEL: "${JAAMSIM_MODEL:-/models/model.cfg}"
+      # Flags adicionales para JaamSim (ej: -r 10  para 10 réplicas)
+      JAAMSIM_ARGS: "${JAAMSIM_ARGS:-}"
+      # Opciones de la JVM
+      JAVA_OPTS: "${JAVA_OPTS:--Xms256m -Xmx1g}"
+
+    volumes:
+      - ./models:/models:ro   # modelos .cfg (solo lectura)
+      - ./output:/output      # resultados (escritura)
+      - ./data:/data:ro       # datos auxiliares CSV/parámetros (solo lectura)
+
+    healthcheck:
+      test: ["CMD-SHELL", "test -s /opt/jaamsim.jar && java -version >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+    labels:
+      com.jaamsim.stack: "jaamsim-portainer-stack"
+      com.jaamsim.component: "etapa-1-headless-runner"
+      com.jaamsim.description: "Ejecuta modelos JaamSim en modo headless/batch"
+
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
