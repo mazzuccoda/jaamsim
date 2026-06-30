@@ -1,6 +1,6 @@
 # JaamSim GUI (interfaz nativa accesible por navegador vía noVNC)
 # Despliegue en Portainer: Stacks -> Repository -> Compose path: docker-compose.gui.yml
-# Luego abrí:  http://<IP-del-host>:8080/vnc.html
+# Luego abrí:  http://<IP-del-host>:8090/  (cambia el puerto con NOVNC_PORT)
 services:
   jaamsim-gui:
     build:
@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
 
     ports:
-      - "${NOVNC_PORT:-8080}:8080"   # noVNC (web) -> http://host:8080/vnc.html
+      - "${NOVNC_PORT:-8090}:8080"   # noVNC (web) -> http://host:8090/
 
     environment:
       # Resolución del escritorio virtual

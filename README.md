@@ -138,21 +138,22 @@ En Portainer: **Stacks → Add stack → Repository**, igual que el stack headle
 pero con **Compose path** = `docker-compose.gui.yml`. Luego abrí en el navegador:
 
 ```
-http://<IP-del-host>:8080/
+http://<IP-del-host>:8090/
 ```
 
-(El `/` redirige automáticamente a `vnc.html` y conecta solo.)
+(El `/` redirige automáticamente a `vnc.html` y conecta solo. Si el 8090 también
+está ocupado, cambialo con la variable `NOVNC_PORT`.)
 
 Localmente:
 ```bash
 docker compose -f docker-compose.gui.yml up --build
-# luego abrí http://localhost:8080/
+# luego abrí http://localhost:8090/
 ```
 
 ### Variables (GUI)
 | Variable | Default | Descripción |
 |----------|---------|-------------|
-| `NOVNC_PORT` | `8080` | Puerto web (noVNC) publicado |
+| `NOVNC_PORT` | `8090` | Puerto web (noVNC) publicado en el host |
 | `VNC_PASSWORD` | *(vacío)* | Contraseña VNC. **Definila** para proteger el acceso |
 | `SCREEN_WIDTH` / `SCREEN_HEIGHT` | `1440` / `900` | Resolución del escritorio virtual |
 | `JAAMSIM_MODEL` | *(vacío)* | Modelo `.cfg` a abrir al iniciar (ej. `/models/almacen.cfg`) |
@@ -161,8 +162,8 @@ docker compose -f docker-compose.gui.yml up --build
 Los modelos que crees/edites en la GUI se guardan en `./models` (montado r/w) y
 los resultados en `./output`, de modo que podés correrlos luego en modo headless.
 
-> **Seguridad:** sin `VNC_PASSWORD` cualquiera con acceso de red al puerto 8080
-> puede usar la GUI. Definí una contraseña y/o poné el servicio detrás de un
+> **Seguridad:** sin `VNC_PASSWORD` cualquiera con acceso de red al puerto
+> publicado puede usar la GUI. Definí una contraseña y/o poné el servicio detrás de un
 > reverse proxy con TLS/autenticación. noVNC viaja sin cifrar salvo que uses
 > HTTPS por delante.
 
