@@ -1,0 +1,31 @@
+# --- Resultados de simulación (no versionar, conservar .gitkeep) ---
+output/*
+!output/.gitkeep
+
+# --- Datos auxiliares (no versionar, conservar .gitkeep) ---
+data/*
+!data/.gitkeep
+
+# --- Modelos de ejemplo del usuario (opcional) ---
+# Descomenta si NO quieres versionar tus .cfg locales:
+# models/*
+# !models/.gitkeep
+
+# --- Variables de entorno locales ---
+.env
+
+# --- El JAR nunca se versiona (se descarga en build) ---
+*.jar
+
+# --- Logs ---
+*.log
+
+# --- Archivos del sistema operativo ---
+.DS_Store
+Thumbs.db
+
+# --- Python (etapas futuras: API REST, SimPy/Mesa, Django) ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
