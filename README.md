@@ -28,8 +28,8 @@ desplegarse directamente desde **Portainer → Stacks → Repository**.
 
 ```
 jaamsim-portainer-stack/
-├── docker-compose.yml      # Stack headless/batch (Portainer / CLI)
-├── docker-compose.gui.yml  # Stack GUI nativa por navegador (noVNC)
+├── docker-compose.yml      # Stack principal: GUI (8090) + runner headless
+├── docker-compose.gui.yml  # Stack alternativo: SOLO la GUI por navegador
 ├── Dockerfile              # Imagen headless: temurin:21-jre + JaamSim + tini
 ├── .env.example            # Plantilla de variables de entorno
 ├── .gitignore
@@ -47,9 +47,11 @@ jaamsim-portainer-stack/
     └── start.sh            # Arranque de X virtual, VNC, noVNC y JaamSim
 ```
 
-> Hay **dos modos de uso**, independientes:
-> - **Headless/batch** (`docker-compose.yml`) — para correr modelos automáticamente. Es la Etapa 1 principal.
-> - **GUI en el navegador** (`docker-compose.gui.yml`) — la interfaz gráfica nativa de JaamSim accesible por web vía noVNC. Ver [sección GUI](#gui-de-jaamsim-en-el-navegador-novnc).
+> El **`docker-compose.yml`** principal levanta **dos servicios** en un solo stack:
+> - **`jaamsim-gui`** — la interfaz gráfica nativa de JaamSim por navegador (noVNC), en el puerto **8090**. Ver [sección GUI](#gui-de-jaamsim-en-el-navegador-novnc).
+> - **`jaamsim-runner`** — ejecución headless/batch de modelos `.cfg`.
+>
+> Si querés **solo la GUI** (sin el runner headless), existe también `docker-compose.gui.yml`.
 
 ---
 
@@ -69,9 +71,14 @@ jaamsim-portainer-stack/
    Si no defines nada, se usan los valores por defecto.
 5. Pulsa **Deploy the stack**.
 
-Portainer hará el `build` de la imagen (descargando el JAR) y arrancará el
-servicio `jaamsim-runner`. La primera vez tarda un poco más por la descarga del
-JAR y de la imagen base.
+Portainer hará el `build` de las imágenes (descargando el JAR) y arrancará los
+servicios **`jaamsim-gui`** (GUI por navegador en el puerto **8090**) y
+**`jaamsim-runner`** (headless). La primera vez tarda un poco más por la descarga
+del JAR y de las imágenes base.
+
+> Una vez desplegado, abrí la GUI en **`http://<IP-del-host>:8090/`**. El
+> `jaamsim-runner` solo procesa un modelo si existe `JAAMSIM_MODEL`; si no, queda
+> a la espera (no afecta a la GUI).
 
 > **Nota:** este stack hace `build` desde el repositorio, por lo que el host de
 > Docker debe tener acceso a Internet para descargar la imagen base y el JAR.
@@ -134,8 +141,10 @@ navegador, sin instalar nada en tu PC. El contenedor corre la GUI sobre un X
 virtual (`Xvfb`) y la expone por web con `x11vnc` + `noVNC`.
 
 ### Desplegar
-En Portainer: **Stacks → Add stack → Repository**, igual que el stack headless
-pero con **Compose path** = `docker-compose.gui.yml`. Luego abrí en el navegador:
+La GUI **ya viene incluida en el `docker-compose.yml` principal** (servicio
+`jaamsim-gui`), así que con el despliegue de la [sección 3](#3-despliegue-desde-portainer-paso-a-paso)
+ya la tenés. Si preferís un stack **solo-GUI**, usá **Compose path** =
+`docker-compose.gui.yml`. En cualquier caso, abrí en el navegador:
 
 ```
 http://<IP-del-host>:8090/
