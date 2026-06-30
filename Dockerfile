@@ -6,8 +6,8 @@ FROM eclipse-temurin:21-jre
 
 # --- Argumentos de build ---------------------------------------------------
 # Versión de JaamSim a descargar. Se puede sobreescribir con:
-#   docker build --build-arg JAAMSIM_VERSION=2025-02 .
-ARG JAAMSIM_VERSION=2025-02
+#   docker build --build-arg JAAMSIM_VERSION=2026-04 .
+ARG JAAMSIM_VERSION=2026-04
 # URL del JAR construida a partir de la versión. Permite override completo.
 ARG JAAMSIM_JAR_URL=https://github.com/jaamsim/jaamsim/releases/download/v${JAAMSIM_VERSION}/JaamSim${JAAMSIM_VERSION}.jar
 

@@ -6,7 +6,7 @@
 FROM eclipse-temurin:21-jre
 
 # --- Argumentos de build ---------------------------------------------------
-ARG JAAMSIM_VERSION=2025-02
+ARG JAAMSIM_VERSION=2026-04
 ARG JAAMSIM_JAR_URL=https://github.com/jaamsim/jaamsim/releases/download/v${JAAMSIM_VERSION}/JaamSim${JAAMSIM_VERSION}.jar
 
 LABEL org.opencontainers.image.title="jaamsim-gui" \
