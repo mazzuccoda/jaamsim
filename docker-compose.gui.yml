@@ -7,8 +7,8 @@ services:
       context: .
       dockerfile: gui/Dockerfile
       args:
-        JAAMSIM_VERSION: "2025-02"
-    image: jaamsim-gui:2025-02
+        JAAMSIM_VERSION: "2026-04"
+    image: jaamsim-gui:2026-04
     container_name: jaamsim-gui
     restart: unless-stopped
 

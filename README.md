@@ -1,6 +1,6 @@
 # jaamsim-portainer-stack
 
-Stack Docker para ejecutar **JaamSim 2025-02** en modo *headless / batch* sobre
+Stack Docker para ejecutar **JaamSim 2026-04** en modo *headless / batch* sobre
 un servidor Linux propio (mini PC con Docker + Portainer). Pensado para
 desplegarse directamente desde **Portainer → Stacks → Repository**.
 
@@ -128,7 +128,7 @@ no necesitas incluirlos en `JAAMSIM_ARGS`.
 > Simulation NumberOfReplications { 10 }
 > ```
 > Flags de CLI realmente soportados por JaamSim (verificados sobre el JAR
-> 2025-02): `-h`/`-headless`, `-b`/`-batch`, `-q`/`-quiet`,
+> 2026-04): `-h`/`-headless`, `-b`/`-batch`, `-q`/`-quiet`,
 > `-sg`/`-safe_graphics`, `-og`/`-optional_graphics`, `-script`.
 
 ---
@@ -297,7 +297,7 @@ docker compose down
 
 | Tecnología | Uso | Versión |
 |-----------|-----|---------|
-| [JaamSim](https://jaamsim.com/) | Motor de simulación de eventos discretos | 2025-02 |
+| [JaamSim](https://jaamsim.com/) | Motor de simulación de eventos discretos | 2026-04 |
 | [Eclipse Temurin (Adoptium)](https://adoptium.net/) | Runtime de Java (OpenJDK) | `21-jre` |
 | [Docker](https://www.docker.com/) | Contenerización | Engine 20+ |
 | [Docker Compose](https://docs.docker.com/compose/) | Definición del stack | v2 (`docker compose`) |
