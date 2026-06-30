@@ -1,6 +1,73 @@
-# JaamSim headless stack — listo para Portainer (Stacks -> Repository)
+# JaamSim stack — listo para Portainer (Stacks -> Repository)
 # Docker Compose v2 (usar:  docker compose ...,  sin guión)
+#
+# Este stack levanta DOS servicios:
+#   - jaamsim-gui:    interfaz gráfica nativa por navegador (noVNC) en el puerto 8090
+#   - jaamsim-runner: ejecución headless/batch de modelos .cfg
+# Abrí la GUI en:  http://<IP-del-host>:8090/
 services:
+  # ---------------------------------------------------------------------------
+  # GUI nativa de JaamSim accesible por navegador (noVNC)
+  # ---------------------------------------------------------------------------
+  jaamsim-gui:
+    build:
+      context: .
+      dockerfile: gui/Dockerfile
+      args:
+        JAAMSIM_VERSION: "2025-02"
+    image: jaamsim-gui:2025-02
+    container_name: jaamsim-gui
+    restart: unless-stopped
+
+    ports:
+      - "${NOVNC_PORT:-8090}:8080"   # noVNC (web) -> http://host:8090/
+
+    environment:
+      SCREEN_WIDTH: "${SCREEN_WIDTH:-1440}"
+      SCREEN_HEIGHT: "${SCREEN_HEIGHT:-900}"
+      # Contraseña VNC (MUY recomendado definirla si queda expuesto a internet).
+      VNC_PASSWORD: "${VNC_PASSWORD:-}"
+      # Modelo a abrir automáticamente (opcional), ej: /models/almacen.cfg
+      JAAMSIM_MODEL: "${GUI_JAAMSIM_MODEL:-}"
+      JAVA_OPTS: "${GUI_JAVA_OPTS:--Xms256m -Xmx1536m}"
+
+    volumes:
+      - ./models:/models     # modelos .cfg (lectura/escritura desde la GUI)
+      - ./output:/output     # resultados de simulación
+      - ./data:/data:ro      # datos auxiliares (solo lectura)
+
+    shm_size: "512m"         # memoria compartida para X/OpenGL por software
+
+    healthcheck:
+      test: ["CMD-SHELL", "test -s /opt/jaamsim.jar && wget -q -O /dev/null http://localhost:8080/vnc.html || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+    labels:
+      com.jaamsim.stack: "jaamsim-portainer-stack"
+      com.jaamsim.component: "gui-novnc"
+      com.jaamsim.description: "GUI nativa de JaamSim accesible por navegador (noVNC)"
+
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 3G
+        reservations:
+          cpus: "0.5"
+          memory: 768M
+
+  # ---------------------------------------------------------------------------
+  # Ejecución headless / batch de modelos
+  # ---------------------------------------------------------------------------
   jaamsim-runner:
     build:
       context: .
@@ -14,7 +81,8 @@ services:
     environment:
       # Ruta al modelo .cfg dentro del contenedor
       JAAMSIM_MODEL: "${JAAMSIM_MODEL:-/models/model.cfg}"
-      # Flags adicionales para JaamSim (ej: -r 10  para 10 réplicas)
+      # Flags adicionales para JaamSim (las réplicas se definen en el .cfg con
+      # 'Simulation NumberOfReplications { N }', no existe un flag -r N)
       JAAMSIM_ARGS: "${JAAMSIM_ARGS:-}"
       # Opciones de la JVM
       JAVA_OPTS: "${JAVA_OPTS:--Xms256m -Xmx1g}"
